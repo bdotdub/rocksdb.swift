@@ -183,7 +183,7 @@ final class RocksDBTests: XCTestCase {
         }
 
         var i = 0
-        for (key, val) in rocksDB.sequence(keyType: String.self, valueType: String.self) {
+        rocksDB.sequence().forEach { (key: String, val: String) in
             XCTAssertEqual(key, orderedKeysAndValues[i].key)
             XCTAssertEqual(val, orderedKeysAndValues[i].value)
             i += 1
@@ -191,7 +191,7 @@ final class RocksDBTests: XCTestCase {
         XCTAssertEqual(i, 4)
 
         i = 1
-        for (key, val) in rocksDB.sequence(keyType: String.self, valueType: String.self, gte: "testMultipleEmoji") {
+        rocksDB.sequence(gte: "testMultipleEmoji").forEach { (key: String, val: String) in
             XCTAssertEqual(key, orderedKeysAndValues[i].key)
             XCTAssertEqual(val, orderedKeysAndValues[i].value)
             i += 1
@@ -199,7 +199,7 @@ final class RocksDBTests: XCTestCase {
         XCTAssertEqual(i, 4)
 
         i = 2
-        for (key, val) in rocksDB.sequence(keyType: String.self, valueType: String.self, gte: "testText") {
+        rocksDB.sequence(gte: "testText").forEach { (key: String, val: String) in
             XCTAssertEqual(key, orderedKeysAndValues[i].key)
             XCTAssertEqual(val, orderedKeysAndValues[i].value)
             i += 1
@@ -207,7 +207,7 @@ final class RocksDBTests: XCTestCase {
         XCTAssertEqual(i, 4)
 
         i = 3
-        for (key, val) in rocksDB.sequence(keyType: String.self, valueType: String.self, lte: "testTextEmoji") {
+        rocksDB.sequence(lte: "testTextEmoji").forEach { (key: String, val: String) in
             XCTAssertEqual(key, orderedKeysAndValues[i].key)
             XCTAssertEqual(val, orderedKeysAndValues[i].value)
             i -= 1
@@ -215,7 +215,7 @@ final class RocksDBTests: XCTestCase {
         XCTAssertEqual(i, -1)
 
         i = 2
-        for (key, val) in rocksDB.sequence(keyType: String.self, valueType: String.self, lte: "testText") {
+        rocksDB.sequence(lte: "testText").forEach { (key: String, val: String) in
             XCTAssertEqual(key, orderedKeysAndValues[i].key)
             XCTAssertEqual(val, orderedKeysAndValues[i].value)
             i -= 1

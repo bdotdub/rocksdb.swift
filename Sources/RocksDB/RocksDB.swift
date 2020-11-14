@@ -203,19 +203,10 @@ public final class RocksDB {
     }
 
     public func sequence<Key: RocksDBValueInitializable, Value: RocksDBValueInitializable>(
-        keyType: Key.Type? = nil,
-        valueType: Value.Type? = nil,
-        gte: String? = nil
+        gte: String? = nil,
+        lte: String? = nil
     ) -> RocksDBSequence<Key, Value> {
-        return RocksDBSequence(iterator: RocksDBIterator(db: db, prefix: prefix, gte: gte, lte: nil))
-    }
-
-    public func sequence<Key: RocksDBValueInitializable, Value: RocksDBValueInitializable>(
-        keyType: Key.Type? = nil,
-        valueType: Value.Type? = nil,
-        lte: String
-    ) -> RocksDBSequence<Key, Value> {
-        return RocksDBSequence(iterator: RocksDBIterator(db: db, prefix: prefix, gte: nil, lte: lte))
+        return RocksDBSequence(iterator: RocksDBIterator(db: db, prefix: prefix, gte: gte, lte: lte))
     }
 
     /// Write the given Operations as a batch update to the database.
