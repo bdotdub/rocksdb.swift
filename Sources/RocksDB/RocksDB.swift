@@ -60,7 +60,7 @@ public final class RocksDB {
 
         // Optimize rocksdb
         rocksdb_options_increase_parallelism(dbOptions, Int32(cpus))
-        rocksdb_options_optimize_level_style_compaction(dbOptions, 0)
+        // rocksdb_options_optimize_level_style_compaction(dbOptions, 0)
 
         // create the DB if it's not already present
         rocksdb_options_set_create_if_missing(dbOptions, 1)
