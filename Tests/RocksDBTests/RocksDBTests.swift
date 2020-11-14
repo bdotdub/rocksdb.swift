@@ -1,6 +1,24 @@
 import XCTest
 @testable import RocksDB
 
+struct TestRocksDataType: RocksDBValueConvertible {
+
+    let value: String
+
+    init(_ value: String) {
+        self.value = value
+    }
+
+    init(data: Data) throws {
+        try value = String(data: data) + "-DESERIALIZE"
+    }
+
+    func makeData() throws -> Data {
+        return try (value + "-SERIALIZE").makeData()
+    }
+
+}
+
 final class RocksDBTests: XCTestCase {
 
     var rocksDB: RocksDB!
@@ -13,6 +31,24 @@ final class RocksDBTests: XCTestCase {
         super.tearDown()
     }
 
+    func testInitializableGet() {
+        let path = "/tmp/\(UUID().uuidString)"
+        rocksDB = try! RocksDB(path: URL(fileURLWithPath: path))
+
+        try! rocksDB.put(key: "testText", value: TestRocksDataType("test"))
+
+        do {
+            let value: TestRocksDataType = try rocksDB.get(key: "testText")
+            XCTAssertEqual(value.value, "test-SERIALIZE-DESERIALIZE")
+        } catch {
+            XCTFail("Unable to get key")
+        }
+
+        rocksDB.closeDB()
+
+        try! FileManager.default.removeItem(at: rocksDB.path)
+    }
+
     func testSimplePut() {
         let path = "/tmp/\(UUID().uuidString)"
         rocksDB = try! RocksDB(path: URL(fileURLWithPath: path))
@@ -22,10 +58,10 @@ final class RocksDBTests: XCTestCase {
         try! rocksDB.put(key: "testTextEmoji", value: "emojitext 😂")
         try! rocksDB.put(key: "testMultipleEmoji", value: "😂😂😂")
 
-        XCTAssertEqual(try! rocksDB.get(type: String.self, key: "testText"), "lolamkhaha")
-        XCTAssertEqual(try! rocksDB.get(type: String.self, key: "testEmoji"), "😂")
-        XCTAssertEqual(try! rocksDB.get(type: String.self, key: "testTextEmoji"), "emojitext 😂")
-        XCTAssertEqual(try! rocksDB.get(type: String.self, key: "testMultipleEmoji"), "😂😂😂")
+        XCTAssertEqual(try! rocksDB.get(key: "testText"), "lolamkhaha")
+        XCTAssertEqual(try! rocksDB.get(key: "testEmoji"), "😂")
+        XCTAssertEqual(try! rocksDB.get(key: "testTextEmoji"), "emojitext 😂")
+        XCTAssertEqual(try! rocksDB.get(key: "testMultipleEmoji"), "😂😂😂")
 
         rocksDB.closeDB()
 
@@ -39,7 +75,7 @@ final class RocksDBTests: XCTestCase {
         try! rocksDB.put(key: "testDeleteKey", value: "this is a simple value 😘")
         try! rocksDB.delete(key: "testDeleteKey")
 
-        XCTAssertEqual(try! rocksDB.get(type: String.self, key: "testDeleteKey"), "")
+        XCTAssertEqual(try! rocksDB.get(key: "testDeleteKey"), "")
 
         rocksDB.closeDB()
 
@@ -56,28 +92,28 @@ final class RocksDBTests: XCTestCase {
         try! prefixedDB.put(key: "testTextEmoji", value: "emojitext 😂")
         try! prefixedDB.put(key: "testMultipleEmoji", value: "😂😂😂")
 
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "testText"), "lolamkhaha")
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "testEmoji"), "😂")
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "testTextEmoji"), "emojitext 😂")
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "testMultipleEmoji"), "😂😂😂")
+        XCTAssertEqual(try! prefixedDB.get(key: "testText"), "lolamkhaha")
+        XCTAssertEqual(try! prefixedDB.get(key: "testEmoji"), "😂")
+        XCTAssertEqual(try! prefixedDB.get(key: "testTextEmoji"), "emojitext 😂")
+        XCTAssertEqual(try! prefixedDB.get(key: "testMultipleEmoji"), "😂😂😂")
 
         prefixedDB.closeDB()
 
         let wrongPrefixedDB = try! RocksDB(path: URL(fileURLWithPath: prefixedPath), prefix: "wrongprefix")
 
-        XCTAssertEqual(try! wrongPrefixedDB.get(type: String.self, key: "testText"), "")
-        XCTAssertEqual(try! wrongPrefixedDB.get(type: String.self, key: "testEmoji"), "")
-        XCTAssertEqual(try! wrongPrefixedDB.get(type: String.self, key: "testTextEmoji"), "")
-        XCTAssertEqual(try! wrongPrefixedDB.get(type: String.self, key: "testMultipleEmoji"), "")
+        XCTAssertEqual(try! wrongPrefixedDB.get(key: "testText"), "")
+        XCTAssertEqual(try! wrongPrefixedDB.get(key: "testEmoji"), "")
+        XCTAssertEqual(try! wrongPrefixedDB.get(key: "testTextEmoji"), "")
+        XCTAssertEqual(try! wrongPrefixedDB.get(key: "testMultipleEmoji"), "")
 
         wrongPrefixedDB.closeDB()
 
         let prefixedDB2 = try! RocksDB(path: URL(fileURLWithPath: prefixedPath), prefix: "correctprefix")
 
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testText"), "lolamkhaha")
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testEmoji"), "😂")
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testTextEmoji"), "emojitext 😂")
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testMultipleEmoji"), "😂😂😂")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testText"), "lolamkhaha")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testEmoji"), "😂")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testTextEmoji"), "emojitext 😂")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testMultipleEmoji"), "😂😂😂")
 
         prefixedDB2.closeDB()
 
@@ -112,19 +148,19 @@ final class RocksDBTests: XCTestCase {
         try! prefixedDB2.delete(key: "testTextEmoji")
         try! prefixedDB2.delete(key: "testMultipleEmoji")
 
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testText"), "")
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testEmoji"), "")
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testTextEmoji"), "")
-        XCTAssertEqual(try! prefixedDB2.get(type: String.self, key: "testMultipleEmoji"), "")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testText"), "")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testEmoji"), "")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testTextEmoji"), "")
+        XCTAssertEqual(try! prefixedDB2.get(key: "testMultipleEmoji"), "")
 
         prefixedDB2.closeDB()
 
         let wrongPrefixedDB2 = try! RocksDB(path: URL(fileURLWithPath: prefixedPath), prefix: "wrongprefix")
 
-        XCTAssertEqual(try! wrongPrefixedDB2.get(type: String.self, key: "testText"), "lolamkhaha")
-        XCTAssertEqual(try! wrongPrefixedDB2.get(type: String.self, key: "testEmoji"), "😂")
-        XCTAssertEqual(try! wrongPrefixedDB2.get(type: String.self, key: "testTextEmoji"), "emojitext 😂")
-        XCTAssertEqual(try! wrongPrefixedDB2.get(type: String.self, key: "testMultipleEmoji"), "😂😂😂")
+        XCTAssertEqual(try! wrongPrefixedDB2.get(key: "testText"), "lolamkhaha")
+        XCTAssertEqual(try! wrongPrefixedDB2.get(key: "testEmoji"), "😂")
+        XCTAssertEqual(try! wrongPrefixedDB2.get(key: "testTextEmoji"), "emojitext 😂")
+        XCTAssertEqual(try! wrongPrefixedDB2.get(key: "testMultipleEmoji"), "😂😂😂")
 
         wrongPrefixedDB2.closeDB()
 
@@ -209,10 +245,10 @@ final class RocksDBTests: XCTestCase {
             .put(key: "testText", value: "textTextValue")
         ])
 
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "testEmoji"), "😂")
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "someThing"), "")
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "secondKey"), "anotherValue")
-        XCTAssertEqual(try! prefixedDB.get(type: String.self, key: "testText"), "textTextValue")
+        XCTAssertEqual(try! prefixedDB.get(key: "testEmoji"), "😂")
+        XCTAssertEqual(try! prefixedDB.get(key: "someThing"), "")
+        XCTAssertEqual(try! prefixedDB.get(key: "secondKey"), "anotherValue")
+        XCTAssertEqual(try! prefixedDB.get(key: "testText"), "textTextValue")
 
         prefixedDB.closeDB()
     }

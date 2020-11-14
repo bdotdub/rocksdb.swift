@@ -165,13 +165,16 @@ public final class RocksDB {
         try put(key: key, value: value.makeData())
     }
 
-    /// Returns the value for the given key in the database.
-    /// Returns empty Data if the key is not set in the database.
+    /// Returns the value for the given key in the database initialized with the given type.
+    ///
+    /// The given type decides how to treat empty fields. Because the database returns an empty Data object
+    /// if the key does not exist, `String` will for example be an empty String.
     ///
     /// - parameter key: The key to search the database for.
     ///
-    /// - throws: If the get operation fails (`Error.getFailed(message:)`)
-    public func get(key: String) throws -> Data {
+    /// - throws: If the get operation fails (`Error.getFailed(message:)`) and
+    ///           if the given type is not initializable from the data (`Error.dataNotConvertible`)
+    public func get<T: RocksDBValueInitializable>(key: String) throws -> T {
         let key = getPrefixedKey(from: key)
 
         var len: Int = 0
@@ -183,21 +186,7 @@ public final class RocksDB {
 
         free(returnValue)
 
-        return copy
-    }
-
-    /// Returns the value for the given key in the database initialized with the given type.
-    ///
-    /// The given type decides how to treat empty fields. Because the database returns an empty Data object
-    /// if the key does not exist, `String` will for example be an empty String.
-    ///
-    /// - parameter type: The type to which the data should be converted.
-    /// - parameter key: The key to search the database for.
-    ///
-    /// - throws: If the get operation fails (`Error.getFailed(message:)`) and
-    ///           if the given type is not initializable from the data (`Error.dataNotConvertible`)
-    public func get<T: RocksDBValueInitializable>(type: T.Type, key: String) throws -> T {
-        return try type.init(data: get(key: key))
+        return try T.init(data: copy)
     }
 
     /// Deletes the given key in the database, if it is available.
